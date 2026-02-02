@@ -181,43 +181,40 @@ async def process_q13(message: types.Message, state: FSMContext):
 
 async def finish_survey(message: types.Message, state: FSMContext):
     user_data = await state.get_data()
-    username = f"@{message.from_user.username}" if message.from_user.username else "Нет ника"
-    user_link = f"tg://user?id={message.from_user.id}"
     
-    # Формируем отчет для админа
+    # 1. Собираем данные безопасно (если данных нет, будет прочерк)
+    name = user_data.get('q2_name', 'Не указано')
+    phone = user_data.get('q3_phone', 'Не указано')
+    budget = user_data.get('q4_budget', 'Не указано')
+    delivery = user_data.get('q12_delivery', 'Не указано')
+    address = user_data.get('q13_address', 'Самовывоз/Курьер')
+    username = f"@{message.from_user.username}" if message.from_user.username else "Нет ника"
+
+    # 2. Формируем текст БЕЗ спец-разметки (Markdown), чтобы бот не падал на символах типа "_" или "*"
     report = (
-        f"📩 **НОВАЯ ЗАЯВКА FPStore**\n"
-        f"👤 Клиент: {user_data.get('q2_name')} ({username})\n"
-        f"🔗 Ссылка: [Профиль клиента]({user_link})\n"
-        f"📞 Тел: {user_data.get('q3_phone')}\n"
-        f"💰 Бюджет: {user_data.get('q4_budget')}\n"
-        f"⚙️ Сборка в бюджет: {user_data.get('q5_service')}\n"
-        f"🎮 Задачи: {user_data.get('q6_tasks')}\n"
-        f"🎨 Цвет: {user_data.get('q6_color')}\n"
-        f"💡 Подсветка: {user_data.get('q7_light')}\n"
-        f"📟 Платформа: {user_data.get('q8_platform')} / {user_data.get('q9_gpu')}\n"
-        f"💿 ОС: {user_data.get('q10_os')}\n"
-        f"📍 Город: {user_data.get('q11_city')}\n"
-        f"🚚 Доставка: {user_data.get('q12_delivery')}\n"
+        f"📩 НОВАЯ ЗАЯВКА FPStore\n\n"
+        f"Имя: {name}\n"
+        f"Связь: {username}\n"
+        f"Телефон: {phone}\n"
+        f"Бюджет: {budget}\n"
+        f"Доставка: {delivery}\n"
+        f"Адрес: {address}\n"
     )
-    if user_data.get('q13_address'):
-        report += f"🏠 Адрес: {user_data.get('q13_address')}\n"
 
     try:
-        await bot.send_message(ADMIN_ID, report, parse_mode="Markdown")
+        # 3. Отправляем админу
+        if ADMIN_ID:
+            await bot.send_message(chat_id=ADMIN_ID, text=report)
+        else:
+            print("ОШИБКА: ADMIN_ID не настроен в Environment Variables!")
+            
+        # 4. Отвечаем клиенту
         await message.answer(
-            "Спасибо за заявку! В скором времени мы свяжемся с Вами!\n\n"
-            "Доставка СДЭК включает страховку и обрешетку. Стоимость рассчитаем при отправке.",
+            "✅ Спасибо за заявку! Мы внимательно изучим её и свяжемся с Вами в ближайшее время!",
             reply_markup=types.ReplyKeyboardRemove()
         )
     except Exception as e:
-        print(f"Ошибка отправки админу: {e}")
+        print(f"КРИТИЧЕСКАЯ ОШИБКА ПРИ ОТПРАВКЕ: {e}")
     
+    # 5. Обязательно закрываем состояние, чтобы клиент мог начать заново
     await state.clear()
-
-async def main():
-    await dp.start_polling(bot)
-
-if __name__ == "__main__":
-    keep_alive()
-    asyncio.run(main())
