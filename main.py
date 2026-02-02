@@ -142,7 +142,7 @@ async def p11(m: types.Message, state: FSMContext):
 @dp.message(Survey.q12_city)
 async def p12(m: types.Message, state: FSMContext):
     await state.update_data(q12=m.text)
-    await m.answer("<b>Способ доставки?</b>", reply_markup=make_kb(["СДЭК", "Самовывоз", "В черте города"))
+    await m.answer("<b>Способ доставки?</b>", reply_markup=make_kb(["СДЭК", "Самовывоз", "В черте города"]))
     await state.set_state(Survey.q13_delivery)
 
 @dp.message(Survey.q13_delivery)
