@@ -60,14 +60,24 @@ def make_kb(items: list):
 @dp.message(Command("start"))
 async def start_survey(message: types.Message, state: FSMContext):
     await state.clear()
+    
+    # Прямая ссылка на фото (можно заменить на свою)
+    photo_url = "https://vk.ru/fpstore23?z=photo-150707624_457239190%2Falbum-150707624_245471187%2Frev"
     link = "https://vk.ru/@fpstore23-politika-konfidencialnosti-fpstore"
-    text = (
+    
+    caption = (
         f"🚀 <b>FPStore</b>\n\n"
         f"Нажимая «ДА», вы принимаете <a href='{link}'>политику конфиденциальности</a>.\n\n"
         f"<b>Сборка планируется в ближайшее время?</b>"
     )
-    # Здесь явно указываем HTML
-    await message.answer(text, reply_markup=make_kb(["ДА", "НЕТ"]), parse_mode="HTML", disable_web_page_preview=True)
+
+    # Отправляем фото с подписью (caption)
+    await message.answer_photo(
+        photo=photo_url,
+        caption=caption,
+        reply_markup=make_kb(["ДА", "НЕТ"]),
+        parse_mode="HTML"
+    )
     await state.set_state(Survey.q1_time)
 
 @dp.message(Survey.q1_time)
