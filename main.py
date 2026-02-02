@@ -1,4 +1,37 @@
+import os
+import asyncio
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.filters import Command
 from flask import Flask
+from threading import Thread
+
+# 1. НАСТРОЙКИ (Берем из Environment Variables в Render)
+API_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = os.getenv("ADMIN_ID")
+
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher()
+
+# 2. ВЕБ-СЕРВЕР (Чтобы Render не выключал бота)
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "FPStore Bot is running!"
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
+# 3. ЛОГИКА БОТА (Твой опрос)
+@dp.message(Command("start"))
+async def start_handler(message: types.Message):
+    await message.answer("Привет! Я бот FPStore. Давай подберем тебе мощный ПК. Какой у тебя бюджет? (Напиши цифрой)")
+
+# from flask import Flask
 from threading import Thread
 import asyncio
 from aiogram import Bot, Dispatcher, types, F
@@ -226,3 +259,11 @@ if __name__ == "__main__":
         print("Shutting down...")
     except Exception as e:
         print(f"Critical error: {e}")
+# 4. ЗАПУСК
+async def main():
+    print("Бот запускается...")
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    keep_alive() # Сначала запускаем веб-сервер
+    asyncio.run(main()) # Потом запускаем бота
