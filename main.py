@@ -52,32 +52,22 @@ def make_row_keyboard(items: list):
 
 @dp.message(Command("start"))
 async def start_survey(message: types.Message, state: FSMContext):
-    # Прямая ссылка на фото твоего белого ПК из ВК
-    photo_url = "https://sun9-13.userapi.com/impf/c637424/v637424624/53549/k8q1-e5uT_E.jpg?size=1280x853&quality=96&sign=c6b7e7e8b6b0b0b0b0b0b0b0b0b0b0b0&type=album" 
-    
+    photo_url = "https://sun9-13.userapi.com/impf/c637424/v637424624/53549/k8q1-e5uT_E.jpg?size=1280x853&quality=96&sign=c6b7e7e8b6b0b0b0b0b0b0b0b0b0b0b0&type=album"
+
     caption_text = (
-        "🚀 **Заявка на сборку ПК в FPStore**\n\n"
-        "Пожалуйста, внимательно заполните форму. Цены актуальны в течение дня.\n\n"
-        "**Вопрос 1:** Планируете ли Вы сборку ПК в ближайшее время?"
+        "🚀 Заявка на сборку ПК в FPStore\n\n"
+        "Нажимая «ДА», вы соглашаетесь с политикой конфиденциальности.\n\n"
+        "Вопрос 1: Планируете ли Вы сборку ПК в ближайшее время?"
     )
-    
+
     try:
-        # Пытаемся отправить с фото
-        await message.answer_photo(
-            photo=photo_url, 
-            caption=caption_text, 
-            reply_markup=make_row_keyboard(["ДА", "НЕТ"]), 
-            parse_mode="Markdown"
-        )
+        # Сначала пробуем отправить фото
+        await message.answer_photo(photo=photo_url, caption=caption_text, reply_markup=make_row_keyboard(["ДА", "НЕТ"]))
     except Exception as e:
-        # Если вдруг ссылка ВК отвалится, бот просто отправит текст, а не "ляжет"
+        # Если фото не грузится, просто отправляем текст, чтобы бот не упал
         print(f"Ошибка фото: {e}")
-        await message.answer(
-            caption_text, 
-            reply_markup=make_row_keyboard(["ДА", "НЕТ"]), 
-            parse_mode="Markdown"
-        )
-    
+        await message.answer(text=caption_text, reply_markup=make_row_keyboard(["ДА", "НЕТ"]))
+
     await state.set_state(Survey.q1_time)
 
 @dp.message(Survey.q1_time)
