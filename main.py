@@ -60,24 +60,14 @@ def make_kb(items: list):
 @dp.message(Command("start"))
 async def start_survey(message: types.Message, state: FSMContext):
     await state.clear()
-    
-    # Прямая ссылка на фото (можно заменить на свою)
-    photo_url = "https://vk.ru/fpstore23?z=photo-150707624_457239190%2Falbum-150707624_245471187%2Frev"
     link = "https://vk.ru/@fpstore23-politika-konfidencialnosti-fpstore"
-    
-    caption = (
+    text = (
         f"🚀 <b>FPStore</b>\n\n"
         f"Нажимая «ДА», вы принимаете <a href='{link}'>политику конфиденциальности</a>.\n\n"
         f"<b>Сборка планируется в ближайшее время?</b>"
     )
-
-    # Отправляем фото с подписью (caption)
-    await message.answer_photo(
-        photo=photo_url,
-        caption=caption,
-        reply_markup=make_kb(["ДА", "НЕТ"]),
-        parse_mode="HTML"
-    )
+    # Здесь явно указываем HTML
+    await message.answer(text, reply_markup=make_kb(["ДА", "НЕТ"]), parse_mode="HTML", disable_web_page_preview=True)
     await state.set_state(Survey.q1_time)
 
 @dp.message(Survey.q1_time)
@@ -177,11 +167,11 @@ async def finish_now(m: types.Message, state: FSMContext):
         f"🔗 <b>Связь:</b> {user}\n"
         f"📞 <b>Тел:</b> {data.get('q3')}\n"
         f"💰 <b>Бюджет:</b> {data.get('q4')}\n"
-        f"📦 <b>Сборка в бюджете?:</b> {data.get('q5')}\n"
+        f"📦 <b>Комплектация:</b> {data.get('q5')}\n"
         f"⚙️ <b>Задачи:</b> {data.get('q6')}\n"
         f"🎨 <b>Цвет корпуса:</b> {data.get('q7')}\n"
         f"💡 <b>Подсветка:</b> {data.get('q8')}\n"
-        f"🔌 <b>Процессор:</b> {data.get('q9')}\n"
+        f"🔌 <b>Платформа:</b> {data.get('q9')}\n"
         f"🎮 <b>Видеокарта:</b> {data.get('q10')}\n"
         f"🖥️ <b>Windows:</b> {data.get('q11')}\n"
         f"📍 <b>Город:</b> {data.get('q12')}\n"
