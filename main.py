@@ -51,7 +51,7 @@ def make_kb(items: list):
 
 @dp.message(Command("start"))
 async def start_survey(message: types.Message, state: FSMContext):
-    policy_url = "ТВОЯ_ССЫЛКА_НА_ВК"  # <--- ВСТАВЬ СВОЮ ССЫЛКУ ТУТ
+    policy_url = "https://vk.ru/@fpstore23-politika-konfidencialnosti-fpstore"  # <--- ВСТАВЬ СВОЮ ССЫЛКУ ТУТ
     text = (
         "🚀 <b>Заявка на сборку ПК в FPStore</b>\n\n"
         f"Нажимая «ДА», вы соглашаетесь с <a href='{policy_url}'>политикой конфиденциальности</a>.\n\n"
