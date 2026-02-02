@@ -83,19 +83,25 @@ async def p2(m: types.Message, state: FSMContext):
 @dp.message(Survey.q3_phone)
 async def p3(m: types.Message, state: FSMContext):
     await state.update_data(q3=m.text)
-    await m.answer("<b>Вопрос 4:</b> Ваш бюджет на сборку?", parse_mode="HTML")
-    await state.set_state(Survey.q4_budget)
+    # Создаем клавиатуру с вариантами бюджета
+    budget_kb = make_kb(["35-50", "50-75", "75-100", "100+"])
 
+await m.answer(
+        "<b>Вопрос 4:</b> Ваш бюджет на сборку (в тыс. руб.)?", 
+        reply_markup=budget_kb, 
+        parse_mode="HTML"
+)
 @dp.message(Survey.q4_budget)
+
 async def p4(m: types.Message, state: FSMContext):
     await state.update_data(q4=m.text)
-    await m.answer("<b>Вопрос 5:</b> Что входит в бюджет?", reply_markup=make_kb(["Только системник", "ПК + монитор"]), parse_mode="HTML")
+    await m.answer("<b>Вопрос 5:</b> Сборка и настройка входит в бюджет?", reply_markup=make_kb(["ДА", "НЕТ"]), parse_mode="HTML")
     await state.set_state(Survey.q5_service)
 
 @dp.message(Survey.q5_service)
 async def p5(m: types.Message, state: FSMContext):
     await state.update_data(q5=m.text)
-    await m.answer("<b>Вопрос 6:</b> Для каких задач ПК?", reply_markup=make_kb(["Игры", "Работа", "Учеба"]), parse_mode="HTML")
+    await m.answer("<b>Вопрос 6:</b> Для каких задач ПК?", reply_markup=make_kb(["Игры", "Офисные задачи", "Другое"]), parse_mode="HTML")
     await state.set_state(Survey.q6_tasks)
 
 @dp.message(Survey.q6_tasks)
@@ -107,13 +113,13 @@ async def p6(m: types.Message, state: FSMContext):
 @dp.message(Survey.q7_color)
 async def p7(m: types.Message, state: FSMContext):
     await state.update_data(q7=m.text)
-    await m.answer("<b>Вопрос 8:</b> Нужна ли подсветка?", reply_markup=make_kb(["Да", "Нет"]), parse_mode="HTML")
+    await m.answer("<b>Вопрос 8:</b> Нужна ли подсветка?", reply_markup=make_kb(["ДА", "НЕТ"]), parse_mode="HTML")
     await state.set_state(Survey.q8_light)
 
 @dp.message(Survey.q8_light)
 async def p8(m: types.Message, state: FSMContext):
     await state.update_data(q8=m.text)
-    await m.answer("<b>Вопрос 9:</b> Платформа?", reply_markup=make_kb(["Intel", "AMD", "Любая"]), parse_mode="HTML")
+    await m.answer("<b>Вопрос 9:</b> Процессор?", reply_markup=make_kb(["Intel", "AMD", "Любой"]), parse_mode="HTML")
     await state.set_state(Survey.q9_platform)
 
 @dp.message(Survey.q9_platform)
@@ -125,7 +131,7 @@ async def p9(m: types.Message, state: FSMContext):
 @dp.message(Survey.q10_gpu)
 async def p10(m: types.Message, state: FSMContext):
     await state.update_data(q10=m.text)
-    await m.answer("<b>Вопрос 11:</b> Нужна Windows?", reply_markup=make_kb(["Да", "Нет"]), parse_mode="HTML")
+    await m.answer("<b>Вопрос 11:</b> Нужна установка Windows?", reply_markup=make_kb(["ДА", "НЕТ"]), parse_mode="HTML")
     await state.set_state(Survey.q11_os)
 
 @dp.message(Survey.q11_os)
@@ -158,13 +164,24 @@ async def finish_now(m: types.Message, state: FSMContext):
     data = await state.get_data()
     user = f"@{m.from_user.username}" if m.from_user.username else "Ник скрыт"
     rep = (
-        f"📩 <b>НОВАЯ ЗАЯВКА</b>\n\n"
+        f"📩 <b>НОВАЯ ЗАЯВКА FPStore</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
         f"👤 <b>Имя:</b> {data.get('q2')}\n"
-        f"🔗 <b>Юзер:</b> {user}\n"
+        f"🔗 <b>Связь:</b> {user}\n"
         f"📞 <b>Тел:</b> {data.get('q3')}\n"
         f"💰 <b>Бюджет:</b> {data.get('q4')}\n"
+        f"📦 <b>Комплектация:</b> {data.get('q5')}\n"
+        f"⚙️ <b>Задачи:</b> {data.get('q6')}\n"
+        f"🎨 <b>Цвет корпуса:</b> {data.get('q7')}\n"
+        f"💡 <b>Подсветка:</b> {data.get('q8')}\n"
+        f"🔌 <b>Платформа:</b> {data.get('q9')}\n"
+        f"🎮 <b>Видеокарта:</b> {data.get('q10')}\n"
+        f"🖥️ <b>Windows:</b> {data.get('q11')}\n"
+        f"📍 <b>Город:</b> {data.get('q12')}\n"
         f"🚚 <b>Доставка:</b> {data.get('q13')}\n"
-        f"🏠 <b>Адрес:</b> {data.get('q14', 'Не указан')}"
+        f"🏠 <b>Адрес СДЭК:</b> {data.get('q14', 'Не указан')}\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"⏰ <b>Срочность:</b> {data.get('q1')}"
     )
     await bot.send_message(ADMIN_ID, rep, parse_mode="HTML")
     await m.answer("✅ <b>Заявка принята!</b> Скоро свяжемся.", reply_markup=types.ReplyKeyboardRemove(), parse_mode="HTML")
