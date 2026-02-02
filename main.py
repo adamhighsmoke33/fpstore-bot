@@ -162,11 +162,16 @@ async def process_q11(message: types.Message, state: FSMContext):
 
 @dp.message(Survey.q12_delivery)
 async def process_q12(message: types.Message, state: FSMContext):
-    data = await state.update_data(q12_delivery=message.text)
-    if message.text == "Транспортной компанией СДЭК":
-        await message.answer("**Вопрос 13:** Введите адрес доставки (индекс, город, улица, дом):")
+    # Сохраняем ответ, убирая лишние пробелы по краям
+    delivery_choice = message.text.strip()
+    await state.update_data(q12_delivery=delivery_choice)
+    
+    # Проверяем выбор (используем "in", чтобы поиск был гибче)
+    if "СДЭК" in delivery_choice:
+        await message.answer("🏠 **Вопрос 13:** Введите адрес доставки (индекс, город, улица, дом):")
         await state.set_state(Survey.q13_address)
     else:
+        # Если это самовывоз или курьер — завершаем опрос
         await finish_survey(message, state)
 
 @dp.message(Survey.q13_address)
