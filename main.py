@@ -83,14 +83,8 @@ async def p2(m: types.Message, state: FSMContext):
 @dp.message(Survey.q3_phone)
 async def p3(m: types.Message, state: FSMContext):
     await state.update_data(q3=m.text)
-    # Создаем клавиатуру с вариантами бюджета
-    budget_kb = make_kb(["35-50", "50-75", "75-100", "100+"])
-
-await m.answer(
-        "<b>Вопрос 4:</b> Ваш бюджет на сборку (в тыс. руб.)?", 
-        reply_markup=budget_kb, 
-        parse_mode="HTML"
-)
+    await m.answer("<b>Вопрос 4:</b> Ваш бюджет на сборку?", reply_markup=make_kb(["35-50", "50-75", "75-100", "100+"]), parse_mode="HTML"), reply_markup=budget_kb, parse_mode="HTML"
+    await state.set_state(Survey.q4_service))
 @dp.message(Survey.q4_budget)
 
 async def p4(m: types.Message, state: FSMContext):
