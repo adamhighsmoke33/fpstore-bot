@@ -2,268 +2,217 @@ import os
 import asyncio
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from flask import Flask
 from threading import Thread
 
-# 1. НАСТРОЙКИ (Берем из Environment Variables в Render)
-API_TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_ID = os.getenv("ADMIN_ID")
-
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher()
-
-# 2. ВЕБ-СЕРВЕР (Чтобы Render не выключал бота)
+# --- БЛОК ОЖИВИТЕЛЯ (ДЛЯ RENDER) ---
 app = Flask('')
-
 @app.route('/')
-def home():
-    return "FPStore Bot is running!"
+def home(): return "FPStore Bot is Online!"
 
-def run():
-    app.run(host='0.0.0.0', port=8080)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
-
-# 3. ЛОГИКА БОТА (Твой опрос)
-@dp.message(Command("start"))
-async def start_handler(message: types.Message):
-    await message.answer("Привет! Я бот FPStore. Давай подберем тебе мощный ПК. Какой у тебя бюджет? (Напиши цифрой)")
-
-# from flask import Flask
-from threading import Thread
-import asyncio
-from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import CommandStart
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
-import os
-
-app = Flask('')
-
-@app.route('/')
-def home():
-    return "I'm alive"
-
-def run():
-    # Replit uses port 5000 for the web server
-    app.run(host='0.0.0.0', port=5000)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
+def run(): app.run(host='0.0.0.0', port=8080)
+def keep_alive(): Thread(target=run).start()
 
 # --- НАСТРОЙКИ ---
-API_TOKEN = os.getenv("BOT_TOKEN")
-admin_id_env = os.getenv("ADMIN_ID")
-ADMIN_ID = int(admin_id_env) if admin_id_env else None
+TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = os.getenv("ADMIN_ID")
 
-# Initialize bot only if token is provided and valid
-bot = None
-if API_TOKEN and API_TOKEN != "YOUR_BOT_TOKEN":
-    try:
-        bot = Bot(token=API_TOKEN)
-    except Exception as e:
-        print(f"Error initializing bot: {e}")
-
+bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 # --- СОСТОЯНИЯ ОПРОСА ---
-class OrderPC(StatesGroup):
+class Survey(StatesGroup):
     q1_time = State()
     q2_name = State()
     q3_phone = State()
     q4_budget = State()
-    q5_service_inc = State()
+    q5_service = State()
     q6_tasks = State()
-    q7_color = State()
-    q8_rgb = State()
-    q9_platform = State()
-    q10_gpu = State()
-    q11_os = State()
-    q12_city = State()
-    q13_delivery = State()
-    q14_address = State()
+    q6_color = State()
+    q7_light = State()
+    q8_platform = State()
+    q9_gpu = State()
+    q10_os = State()
+    q11_city = State()
+    q12_delivery = State()
+    q13_address = State()
 
-# --- КЛАВИАТУРЫ ---
-def get_kb(options):
-    buttons = [[KeyboardButton(text=opt)] for opt in options]
-    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
+# --- ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ КНОПОК ---
+def make_row_keyboard(items: list):
+    builder = ReplyKeyboardBuilder()
+    for item in items:
+        builder.button(text=item)
+    builder.adjust(2)
+    return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
 
-# --- ЛОГИКА ---
+# --- ЛОГИКА БОТА ---
 
-@dp.message(CommandStart())
-async def start_cmd(message: types.Message, state: FSMContext):
-    welcome_text = (
-        "<b>Заявка на сборку ПК в FPStore</b>\n\n"
-        "Пожалуйста, внимательно заполните форму. Внимание! Цены и наличие меняются каждый день. "
-        "Конфигурация актуальна только в течение дня заказа."
+@dp.message(Command("start"))
+async def start_survey(message: types.Message, state: FSMContext):
+    await message.answer(
+        "🚀 **Заявка на сборку ПК в FPStore**\n\n"
+        "Пожалуйста, внимательно заполните форму. Цены актуальны в течение дня.\n\n"
+        "**Вопрос 1:** Планируете ли Вы сборку ПК в ближайшее время?",
+        reply_markup=make_row_keyboard(["ДА", "НЕТ"])
     )
-    await message.answer(welcome_text, parse_mode="HTML")
-    await message.answer("Вопрос 1: ПЛАНИРУЕТЕ ЛИ ВЫ СБОРКУ ПК В БЛИЖАЙШЕЕ ВРЕМЯ?", 
-                         reply_markup=get_kb(["ДА", "НЕТ"]))
-    await state.set_state(OrderPC.q1_time)
+    await state.set_state(Survey.q1_time)
 
-@dp.message(OrderPC.q1_time)
-async def q1(message: types.Message, state: FSMContext):
+@dp.message(Survey.q1_time)
+async def process_q1(message: types.Message, state: FSMContext):
     await state.update_data(q1_time=message.text)
-    await message.answer("Вопрос 2: Ваше Имя", reply_markup=ReplyKeyboardRemove())
-    await state.set_state(OrderPC.q2_name)
+    await message.answer("**Вопрос 2:** Ваше Имя?", reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Survey.q2_name)
 
-@dp.message(OrderPC.q2_name)
-async def q2(message: types.Message, state: FSMContext):
+@dp.message(Survey.q2_name)
+async def process_q2(message: types.Message, state: FSMContext):
     await state.update_data(q2_name=message.text)
-    await message.answer("Вопрос 3: Номер телефона")
-    await state.set_state(OrderPC.q3_phone)
+    await message.answer("**Вопрос 3:** Ваш номер телефона?")
+    await state.set_state(Survey.q3_phone)
 
-@dp.message(OrderPC.q3_phone)
-async def q3(message: types.Message, state: FSMContext):
+@dp.message(Survey.q3_phone)
+async def process_q3(message: types.Message, state: FSMContext):
     await state.update_data(q3_phone=message.text)
-    await message.answer("Вопрос 4: Каков Ваш бюджет на ПК?")
-    await state.set_state(OrderPC.q4_budget)
+    await message.answer("**Вопрос 4:** Каков Ваш бюджет на ПК?")
+    await state.set_state(Survey.q4_budget)
 
-@dp.message(OrderPC.q4_budget)
-async def q4(message: types.Message, state: FSMContext):
+@dp.message(Survey.q4_budget)
+async def process_q4(message: types.Message, state: FSMContext):
     await state.update_data(q4_budget=message.text)
-    text = ("Стоимость услуги по сборке составляет 6% (не менее 3500р). "
-            "В нее входит сборка и кабель-менеджмент.\n\n"
-            "Вопрос 5: Включена ли услуга в бюджет?")
-    await message.answer(text, reply_markup=get_kb(["ДА", "НЕТ"]))
-    await state.set_state(OrderPC.q5_service_inc)
-
-@dp.message(OrderPC.q5_service_inc)
-async def q5(message: types.Message, state: FSMContext):
-    await state.update_data(q5_service_inc=message.text)
-    await message.answer("Вопрос 6: Для каких задач ПК?", 
-                         reply_markup=get_kb(["Работа с документами и серфинг", "Игры", "Свой вариант"]))
-    await state.set_state(OrderPC.q6_tasks)
-
-@dp.message(OrderPC.q6_tasks)
-async def q6(message: types.Message, state: FSMContext):
-    await state.update_data(q6_tasks=message.text)
-    await message.answer("Цвет корпуса и комплектующих:", 
-                         reply_markup=get_kb(["Белый", "Черный", "Не имеет значения", "Свой вариант"]))
-    await state.set_state(OrderPC.q7_color)
-
-@dp.message(OrderPC.q7_color)
-async def q7(message: types.Message, state: FSMContext):
-    await state.update_data(q7_color=message.text)
-    await message.answer("Подсветка в корпусе:", 
-                         reply_markup=get_kb(["ДА", "НЕТ", "Не имеет значения", "Свой вариант"]))
-    await state.set_state(OrderPC.q8_rgb)
-
-@dp.message(OrderPC.q8_rgb)
-async def q8(message: types.Message, state: FSMContext):
-    await state.update_data(q8_rgb=message.text)
-    await message.answer("Платформа:", 
-                         reply_markup=get_kb(["Intel", "AMD", "Я полагаюсь на выбор FPStore"]))
-    await state.set_state(OrderPC.q9_platform)
-
-@dp.message(OrderPC.q9_platform)
-async def q9(message: types.Message, state: FSMContext):
-    await state.update_data(q9_platform=message.text)
-    await message.answer("Видеокарта:", 
-                         reply_markup=get_kb(["Nvidia", "AMD", "Intel", "Я полагаюсь на выбор FPStore"]))
-    await state.set_state(OrderPC.q10_gpu)
-
-@dp.message(OrderPC.q10_gpu)
-async def q10(message: types.Message, state: FSMContext):
-    await state.update_data(q10_gpu=message.text)
-    await message.answer("Установка и настройка Windows + тесты:", 
-                         reply_markup=get_kb(["Windows 10", "Windows 11", "Не нуждаюсь в установке и тестах"]))
-    await state.set_state(OrderPC.q11_os)
-
-@dp.message(OrderPC.q11_os)
-async def q11(message: types.Message, state: FSMContext):
-    await state.update_data(q11_os=message.text)
-    await message.answer("Ваш город:", reply_markup=get_kb(["Горячий Ключ", "Другой город(требуется доставка)"]))
-    await state.set_state(OrderPC.q12_city)
-
-@dp.message(OrderPC.q12_city)
-async def q12(message: types.Message, state: FSMContext):
-    await state.update_data(q12_city=message.text)
-    await message.answer("Способ доставки:", 
-                         reply_markup=get_kb(["Транспортной компанией СДЭК", "Курьером (Горячий Ключ)", "Самовывоз"]))
-    await state.set_state(OrderPC.q13_delivery)
-
-@dp.message(OrderPC.q13_delivery)
-async def q13(message: types.Message, state: FSMContext):
-    await state.update_data(q13_delivery=message.text)
-    
-    if "СДЭК" in message.text:
-        await message.answer("Адрес доставки (индекс, страна, город, улица, дом, квартира):", 
-                             reply_markup=ReplyKeyboardRemove())
-        await state.set_state(OrderPC.q14_address)
-    else:
-        await state.update_data(q14_address="Не требуется")
-        await finish_order(message, state)
-
-@dp.message(OrderPC.q14_address)
-async def q14(message: types.Message, state: FSMContext):
-    await state.update_data(q14_address=message.text)
-    await finish_order(message, state)
-
-async def finish_order(message, state):
-    data = await state.get_data()
-    user = message.from_user
-    
-    # Текст для клиента
-    finish_text = (
-        "Доставка в другие города осуществляется СДЭК (упаковка, обрешетка, страховка). "
-        "Стоимость рассчитывается индивидуально.\n\n"
-        "Спасибо за заявку! В скором времени мы свяжемся с Вами!"
+    await message.answer(
+        "Стоимость услуги по сборке составляет 6% от комплектующих (минимум 3500р).\n"
+        "**Вопрос 5:** Включена ли услуга по сборке в бюджет?",
+        reply_markup=make_row_keyboard(["ДА", "НЕТ"])
     )
-    await message.answer(finish_text, reply_markup=ReplyKeyboardRemove())
+    await state.set_state(Survey.q5_service)
 
-    # Отчет для админа
-    if ADMIN_ID and bot:
-        report = (
-            f"🚀 <b>НОВАЯ ЗАЯВКА FPStore</b>\n"
-            f"Клиент: {data['q2_name']}\n"
-            f"ТГ: @{user.username if user.username else 'нет'} (ID: {user.id})\n"
-            f"Телефон: {data['q3_phone']}\n"
-            f"🏙 Город: {data['q12_city']}\n"
-            f"--------------------------\n"
-            f"💰 Бюджет: {data['q4_budget']} (Сборка вкл: {data['q5_service_inc']})\n"
-            f"🎯 Задачи: {data['q6_tasks']}\n"
-            f"🎨 Цвет: {data['q7_color']} | RGB: {data['q8_rgb']}\n"
-            f"💻 Железо: {data['q9_platform']} + {data['q10_gpu']}\n"
-            f"💿 ОС: {data['q11_os']}\n"
-            f"🚚 Доставка: {data['q13_delivery']}\n"
-            f"📍 Адрес: {data['q14_address']}\n"
-            f"⏳ Сборка в ближайшее время: {data['q1_time']}"
+@dp.message(Survey.q5_service)
+async def process_q5(message: types.Message, state: FSMContext):
+    await state.update_data(q5_service=message.text)
+    await message.answer(
+        "**Вопрос 6:** Для каких задач будущий ПК?",
+        reply_markup=make_row_keyboard(["Игры", "Работа с документами", "Свой вариант"])
+    )
+    await state.set_state(Survey.q6_tasks)
+
+@dp.message(Survey.q6_tasks)
+async def process_q6_tasks(message: types.Message, state: FSMContext):
+    await state.update_data(q6_tasks=message.text)
+    await message.answer(
+        "**Вопрос 6 (доп):** Цвет корпуса и комплектующих?",
+        reply_markup=make_row_keyboard(["Белый", "Черный", "Не имеет значения", "Свой вариант"])
+    )
+    await state.set_state(Survey.q6_color)
+
+@dp.message(Survey.q6_color)
+async def process_q6_color(message: types.Message, state: FSMContext):
+    await state.update_data(q6_color=message.text)
+    await message.answer(
+        "**Вопрос 7:** Нужна ли подсветка?",
+        reply_markup=make_row_keyboard(["ДА", "НЕТ", "Не имеет значения", "Свой вариант"])
+    )
+    await state.set_state(Survey.q7_light)
+
+@dp.message(Survey.q7_light)
+async def process_q7(message: types.Message, state: FSMContext):
+    await state.update_data(q7_light=message.text)
+    await message.answer(
+        "**Вопрос 8:** Платформа?",
+        reply_markup=make_row_keyboard(["Intel", "AMD", "Я полагаюсь на выбор FPStore"])
+    )
+    await state.set_state(Survey.q8_platform)
+
+@dp.message(Survey.q8_platform)
+async def process_q8(message: types.Message, state: FSMContext):
+    await state.update_data(q8_platform=message.text)
+    await message.answer(
+        "**Вопрос 9:** Видеокарта?",
+        reply_markup=make_row_keyboard(["Nvidia", "AMD", "Intel", "Я полагаюсь на выбор FPStore"])
+    )
+    await state.set_state(Survey.q9_gpu)
+
+@dp.message(Survey.q9_gpu)
+async def process_q9(message: types.Message, state: FSMContext):
+    await state.update_data(q9_gpu=message.text)
+    await message.answer(
+        "**Вопрос 10:** Установка Windows и тесты?",
+        reply_markup=make_row_keyboard(["Windows 10", "Windows 11", "Не нуждаюсь в установке"])
+    )
+    await state.set_state(Survey.q10_os)
+
+@dp.message(Survey.q10_os)
+async def process_q10(message: types.Message, state: FSMContext):
+    await state.update_data(q10_os=message.text)
+    await message.answer(
+        "**Вопрос 11:** Ваш город?",
+        reply_markup=make_row_keyboard(["Горячий Ключ", "Другой город"])
+    )
+    await state.set_state(Survey.q11_city)
+
+@dp.message(Survey.q11_city)
+async def process_q11(message: types.Message, state: FSMContext):
+    await state.update_data(q11_city=message.text)
+    await message.answer(
+        "**Вопрос 12:** Способ доставки?",
+        reply_markup=make_row_keyboard(["Транспортной компанией СДЭК", "Курьером (ГК)", "Самовывоз"])
+    )
+    await state.set_state(Survey.q12_delivery)
+
+@dp.message(Survey.q12_delivery)
+async def process_q12(message: types.Message, state: FSMContext):
+    data = await state.update_data(q12_delivery=message.text)
+    if message.text == "Транспортной компанией СДЭК":
+        await message.answer("**Вопрос 13:** Введите адрес доставки (индекс, город, улица, дом):")
+        await state.set_state(Survey.q13_address)
+    else:
+        await finish_survey(message, state)
+
+@dp.message(Survey.q13_address)
+async def process_q13(message: types.Message, state: FSMContext):
+    await state.update_data(q13_address=message.text)
+    await finish_survey(message, state)
+
+async def finish_survey(message: types.Message, state: FSMContext):
+    user_data = await state.get_data()
+    username = f"@{message.from_user.username}" if message.from_user.username else "Нет ника"
+    user_link = f"tg://user?id={message.from_user.id}"
+    
+    # Формируем отчет для админа
+    report = (
+        f"📩 **НОВАЯ ЗАЯВКА FPStore**\n"
+        f"👤 Клиент: {user_data.get('q2_name')} ({username})\n"
+        f"🔗 Ссылка: [Профиль клиента]({user_link})\n"
+        f"📞 Тел: {user_data.get('q3_phone')}\n"
+        f"💰 Бюджет: {user_data.get('q4_budget')}\n"
+        f"⚙️ Сборка в бюджет: {user_data.get('q5_service')}\n"
+        f"🎮 Задачи: {user_data.get('q6_tasks')}\n"
+        f"🎨 Цвет: {user_data.get('q6_color')}\n"
+        f"💡 Подсветка: {user_data.get('q7_light')}\n"
+        f"📟 Платформа: {user_data.get('q8_platform')} / {user_data.get('q9_gpu')}\n"
+        f"💿 ОС: {user_data.get('q10_os')}\n"
+        f"📍 Город: {user_data.get('q11_city')}\n"
+        f"🚚 Доставка: {user_data.get('q12_delivery')}\n"
+    )
+    if user_data.get('q13_address'):
+        report += f"🏠 Адрес: {user_data.get('q13_address')}\n"
+
+    try:
+        await bot.send_message(ADMIN_ID, report, parse_mode="Markdown")
+        await message.answer(
+            "Спасибо за заявку! В скором времени мы свяжемся с Вами!\n\n"
+            "Доставка СДЭК включает страховку и обрешетку. Стоимость рассчитаем при отправке.",
+            reply_markup=types.ReplyKeyboardRemove()
         )
-        try:
-            await bot.send_message(ADMIN_ID, report, parse_mode="HTML")
-        except Exception as e:
-            print(f"Error sending report to admin: {e}")
+    except Exception as e:
+        print(f"Ошибка отправки админу: {e}")
+    
     await state.clear()
 
 async def main():
-    keep_alive()  # Запускаем веб-сервер
-    if bot:
-        print("Bot is starting...")
-        await dp.start_polling(bot)
-    else:
-        print("Bot token is missing or invalid. Please set BOT_TOKEN in Secrets.")
-        # Keep the thread alive if bot is not running
-        while True:
-            await asyncio.sleep(3600)
-
-if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        print("Shutting down...")
-    except Exception as e:
-        print(f"Critical error: {e}")
-# 4. ЗАПУСК
-async def main():
-    print("Бот запускается...")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    keep_alive() # Сначала запускаем веб-сервер
-    asyncio.run(main()) # Потом запускаем бота
+    keep_alive()
+    asyncio.run(main())
