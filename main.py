@@ -7,8 +7,10 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
+# Добавили этот импорт для работы с файлами
+from aiogram.types import FSInputFile
 
-# --- 1. ВЕБ-СЕРВЕР ---
+# --- 1. ВЕБ-СЕРВЕР ДЛЯ RENDER ---
 app = Flask('')
 
 @app.route('/')
@@ -28,7 +30,6 @@ def keep_alive():
 TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = os.getenv("ADMIN_ID")
 
-# Убрали DefaultBotProperties, чтобы не было конфликтов с тегами
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
@@ -60,20 +61,40 @@ def make_kb(items: list):
 @dp.message(Command("start"))
 async def start_survey(message: types.Message, state: FSMContext):
     await state.clear()
+    
+    # Путь к твоему фото на гитхабе (в корне проекта)
+    photo_path = "pc.jpg"
     link = "https://vk.ru/@fpstore23-politika-konfidencialnosti-fpstore"
-    text = (
+    
+    caption = (
         f"🚀 <b>FPStore</b>\n\n"
         f"Нажимая «ДА», вы принимаете <a href='{link}'>политику конфиденциальности</a>.\n\n"
         f"<b>Сборка планируется в ближайшее время?</b>"
     )
-    # Здесь явно указываем HTML
-    await message.answer(text, reply_markup=make_kb(["ДА", "НЕТ"]), parse_mode="HTML", disable_web_page_preview=True)
+
+    try:
+        # Проверяем, существует ли файл, прежде чем отправлять
+        if os.path.exists(photo_path):
+            photo = FSInputFile(photo_path)
+            await message.answer_photo(
+                photo=photo,
+                caption=caption,
+                reply_markup=make_kb(["ДА", "НЕТ"]),
+                parse_mode="HTML"
+            )
+        else:
+            # Если файла нет в папке, отправляем просто текст
+            print(f"Файл {photo_path} не найден в директории!")
+            await message.answer(caption, reply_markup=make_kb(["ДА", "НЕТ"]), parse_mode="HTML", disable_web_page_preview=True)
+    except Exception as e:
+        print(f"Ошибка при отправке фото: {e}")
+        await message.answer(caption, reply_markup=make_kb(["ДА", "НЕТ"]), parse_mode="HTML", disable_web_page_preview=True)
+    
     await state.set_state(Survey.q1_time)
 
 @dp.message(Survey.q1_time)
 async def p1(m: types.Message, state: FSMContext):
     await state.update_data(q1=m.text)
-    # Обычный текст без тегов — никаких скобок не будет
     await m.answer("Как к Вам обращаться?")
     await state.set_state(Survey.q2_name)
 
@@ -187,7 +208,11 @@ async def finish_now(m: types.Message, state: FSMContext):
 async def main():
     keep_alive()
     await bot.delete_webhook(drop_pending_updates=True)
+    print("Бот запущен с поддержкой фото pc.jpg!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        print("Бот выключен")
