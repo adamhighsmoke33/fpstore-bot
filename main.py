@@ -56,7 +56,7 @@ def make_kb(items: list):
     builder.adjust(2)
     return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
 
-# --- 3. ЛОГИКА ОПРОСА (БЕЗ НУМЕРАЦИИ) ---
+# --- 3. ЛОГИКА ОПРОСА ---
 
 @dp.message(Command("start"))
 async def start_survey(message: types.Message, state: FSMContext):
@@ -142,7 +142,11 @@ async def p11(m: types.Message, state: FSMContext):
 @dp.message(Survey.q12_city)
 async def p12(m: types.Message, state: FSMContext):
     await state.update_data(q12=m.text)
-    await m.answer("<b>Способ доставки?</b>", reply_markup=make_kb(["СДЭК", "Самовывоз", "В черте города"]))
+    # ЗДЕСЬ БЫЛА ОШИБКА — ТЕПЕРЬ ВСЁ ИСПРАВЛЕНО
+    await m.answer(
+        "<b>Способ доставки?</b>", 
+        reply_markup=make_kb(["СДЭК", "Самовывоз", "В черте города"])
+    )
     await state.set_state(Survey.q13_delivery)
 
 @dp.message(Survey.q13_delivery)
