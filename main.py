@@ -54,92 +54,97 @@ def make_kb(items: list):
     builder.adjust(2)
     return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
 
-# --- 3. ЛОГИКА ---
+# --- 3. ЛОГИКА ОПРОСА ---
 
 @dp.message(Command("start"))
 async def start_survey(message: types.Message, state: FSMContext):
+    # Используем твою ссылку из сохраненной информации
     link = "https://vk.ru/@fpstore23-politika-konfidencialnosti-fpstore"
-    text = f"🚀 <b>FPStore</b>\n\nНажимая «ДА», вы принимаете <a href='{link}'>политику конфиденциальности</a>.\n\n<b>Вопрос 1:</b> Сборка планируется скоро?"
-    await message.answer(text, reply_markup=make_kb(["ДА", "НЕТ"]), parse_mode="HTML")
+    text = (
+        f"🚀 <b>FPStore</b>\n\n"
+        f"Нажимая «ДА», вы принимаете <a href='{link}'>политику конфиденциальности</a>.\n\n"
+        f"<b>Вопрос 1:</b> Сборка планируется в ближайшее время?"
+    )
+    await message.answer(text, reply_markup=make_kb(["ДА", "НЕТ"]), parse_mode="HTML", disable_web_page_preview=True)
     await state.set_state(Survey.q1_time)
 
 @dp.message(Survey.q1_time)
 async def p1(m: types.Message, state: FSMContext):
     await state.update_data(q1=m.text)
-    await m.answer("<b>Вопрос 2:</b> Как к Вам обращаться?")
+    await m.answer("<b>Вопрос 2:</b> Как к Вам обращаться?", parse_mode="HTML")
     await state.set_state(Survey.q2_name)
 
 @dp.message(Survey.q2_name)
 async def p2(m: types.Message, state: FSMContext):
     await state.update_data(q2=m.text)
-    await m.answer("<b>Вопрос 3:</b> Ваш номер телефона?")
+    await m.answer("<b>Вопрос 3:</b> Ваш номер телефона?", parse_mode="HTML")
     await state.set_state(Survey.q3_phone)
 
 @dp.message(Survey.q3_phone)
 async def p3(m: types.Message, state: FSMContext):
     await state.update_data(q3=m.text)
-    await m.answer("<b>Вопрос 4:</b> Ваш бюджет на сборку?")
+    await m.answer("<b>Вопрос 4:</b> Ваш бюджет на сборку?", parse_mode="HTML")
     await state.set_state(Survey.q4_budget)
 
 @dp.message(Survey.q4_budget)
 async def p4(m: types.Message, state: FSMContext):
     await state.update_data(q4=m.text)
-    await m.answer("<b>Вопрос 5:</b> Что входит в бюджет?", reply_markup=make_kb(["Только системник", "ПК + монитор"]))
+    await m.answer("<b>Вопрос 5:</b> Что входит в бюджет?", reply_markup=make_kb(["Только системник", "ПК + монитор"]), parse_mode="HTML")
     await state.set_state(Survey.q5_service)
 
 @dp.message(Survey.q5_service)
 async def p5(m: types.Message, state: FSMContext):
     await state.update_data(q5=m.text)
-    await m.answer("<b>Вопрос 6:</b> Для каких задач ПК?", reply_markup=make_kb(["Игры", "Работа", "Учеба"]))
+    await m.answer("<b>Вопрос 6:</b> Для каких задач ПК?", reply_markup=make_kb(["Игры", "Работа", "Учеба"]), parse_mode="HTML")
     await state.set_state(Survey.q6_tasks)
 
 @dp.message(Survey.q6_tasks)
 async def p6(m: types.Message, state: FSMContext):
     await state.update_data(q6=m.text)
-    await m.answer("<b>Вопрос 7:</b> Цвет корпуса?", reply_markup=make_kb(["Черный", "Белый", "Другой"]))
+    await m.answer("<b>Вопрос 7:</b> Цвет корпуса?", reply_markup=make_kb(["Черный", "Белый", "Другой"]), parse_mode="HTML")
     await state.set_state(Survey.q7_color)
 
 @dp.message(Survey.q7_color)
 async def p7(m: types.Message, state: FSMContext):
     await state.update_data(q7=m.text)
-    await m.answer("<b>Вопрос 8:</b> Нужна ли подсветка?", reply_markup=make_kb(["Да", "Нет"]))
+    await m.answer("<b>Вопрос 8:</b> Нужна ли подсветка?", reply_markup=make_kb(["Да", "Нет"]), parse_mode="HTML")
     await state.set_state(Survey.q8_light)
 
 @dp.message(Survey.q8_light)
 async def p8(m: types.Message, state: FSMContext):
     await state.update_data(q8=m.text)
-    await m.answer("<b>Вопрос 9:</b> Платформа?", reply_markup=make_kb(["Intel", "AMD", "Любая"]))
+    await m.answer("<b>Вопрос 9:</b> Платформа?", reply_markup=make_kb(["Intel", "AMD", "Любая"]), parse_mode="HTML")
     await state.set_state(Survey.q9_platform)
 
 @dp.message(Survey.q9_platform)
 async def p9(m: types.Message, state: FSMContext):
     await state.update_data(q9=m.text)
-    await m.answer("<b>Вопрос 10:</b> Видеокарта?", reply_markup=make_kb(["NVIDIA", "AMD", "Любая"]))
+    await m.answer("<b>Вопрос 10:</b> Видеокарта?", reply_markup=make_kb(["NVIDIA", "AMD", "Любая"]), parse_mode="HTML")
     await state.set_state(Survey.q10_gpu)
 
 @dp.message(Survey.q10_gpu)
 async def p10(m: types.Message, state: FSMContext):
     await state.update_data(q10=m.text)
-    await m.answer("<b>Вопрос 11:</b> Нужна Windows?", reply_markup=make_kb(["Да", "Нет"]))
+    await m.answer("<b>Вопрос 11:</b> Нужна Windows?", reply_markup=make_kb(["Да", "Нет"]), parse_mode="HTML")
     await state.set_state(Survey.q11_os)
 
 @dp.message(Survey.q11_os)
 async def p11(m: types.Message, state: FSMContext):
     await state.update_data(q11=m.text)
-    await m.answer("<b>Вопрос 12:</b> Из какого Вы города?")
+    await m.answer("<b>Вопрос 12:</b> Из какого Вы города?", parse_mode="HTML")
     await state.set_state(Survey.q12_city)
 
 @dp.message(Survey.q12_city)
 async def p12(m: types.Message, state: FSMContext):
     await state.update_data(q12=m.text)
-    await m.answer("<b>Вопрос 13:</b> Доставка?", reply_markup=make_kb(["СДЭК", "Самовывоз"]))
+    await m.answer("<b>Вопрос 13:</b> Доставка?", reply_markup=make_kb(["СДЭК", "Самовывоз"]), parse_mode="HTML")
     await state.set_state(Survey.q13_delivery)
 
 @dp.message(Survey.q13_delivery)
 async def p13(m: types.Message, state: FSMContext):
     await state.update_data(q13=m.text)
     if "СДЭК" in m.text.upper():
-        await m.answer("<b>Вопрос 14:</b> Введите адрес СДЭК:")
+        await m.answer("<b>Вопрос 14:</b> Введите адрес СДЭК:", parse_mode="HTML")
         await state.set_state(Survey.q14_address)
     else:
         await finish_now(m, state)
@@ -152,9 +157,17 @@ async def p14(m: types.Message, state: FSMContext):
 async def finish_now(m: types.Message, state: FSMContext):
     data = await state.get_data()
     user = f"@{m.from_user.username}" if m.from_user.username else "Ник скрыт"
-    rep = f"📩 <b>ЗАЯВКА</b>\n👤 {data.get('q2')}\n🔗 {user}\n📞 {data.get('q3')}\n💰 {data.get('q4')}\n🚚 {data.get('q13')}"
+    rep = (
+        f"📩 <b>НОВАЯ ЗАЯВКА</b>\n\n"
+        f"👤 <b>Имя:</b> {data.get('q2')}\n"
+        f"🔗 <b>Юзер:</b> {user}\n"
+        f"📞 <b>Тел:</b> {data.get('q3')}\n"
+        f"💰 <b>Бюджет:</b> {data.get('q4')}\n"
+        f"🚚 <b>Доставка:</b> {data.get('q13')}\n"
+        f"🏠 <b>Адрес:</b> {data.get('q14', 'Не указан')}"
+    )
     await bot.send_message(ADMIN_ID, rep, parse_mode="HTML")
-    await m.answer("✅ Отправлено!", reply_markup=types.ReplyKeyboardRemove())
+    await m.answer("✅ <b>Заявка принята!</b> Скоро свяжемся.", reply_markup=types.ReplyKeyboardRemove(), parse_mode="HTML")
     await state.clear()
 
 async def main():
