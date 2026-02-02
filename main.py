@@ -171,7 +171,7 @@ async def finish_now(m: types.Message, state: FSMContext):
         f"⚙️ <b>Задачи:</b> {data.get('q6')}\n"
         f"🎨 <b>Цвет корпуса:</b> {data.get('q7')}\n"
         f"💡 <b>Подсветка:</b> {data.get('q8')}\n"
-        f"🔌 <b>Платформа:</b> {data.get('q9')}\n"
+        f"🔌 <b>Процессор:</b> {data.get('q9')}\n"
         f"🎮 <b>Видеокарта:</b> {data.get('q10')}\n"
         f"🖥️ <b>Windows:</b> {data.get('q11')}\n"
         f"📍 <b>Город:</b> {data.get('q12')}\n"
