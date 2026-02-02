@@ -52,22 +52,32 @@ def make_row_keyboard(items: list):
 
 @dp.message(Command("start"))
 async def start_survey(message: types.Message, state: FSMContext):
+    # Прямая ссылка на фото ПК
     photo_url = "https://sun9-13.userapi.com/impf/c637424/v637424624/53549/k8q1-e5uT_E.jpg?size=1280x853&quality=96&sign=c6b7e7e8b6b0b0b0b0b0b0b0b0b0b0b0&type=album"
-
+    
+    # Текст с политикой (используем HTML, он надежнее Markdown для ссылок)
     caption_text = (
-        "🚀 Заявка на сборку ПК в FPStore\n\n"
-        "Нажимая «ДА», вы соглашаетесь с политикой конфиденциальности.\n\n"
-        "Вопрос 1: Планируете ли Вы сборку ПК в ближайшее время?"
+        "🚀 <b>Заявка на сборку ПК в FPStore</b>\n\n"
+        "Нажимая кнопку «ДА», вы подтверждаете заказ и соглашаетесь с "
+        "<a href='https://vk.ru/fpstore23?z=article_edit-150707624_330747'>политикой конфиденциальности</a>.\n\n"
+        "<b>Вопрос 1:</b> Планируете ли Вы сборку ПК в ближайшее время?"
     )
 
     try:
-        # Сначала пробуем отправить фото
-        await message.answer_photo(photo=photo_url, caption=caption_text, reply_markup=make_row_keyboard(["ДА", "НЕТ"]))
+        await message.answer_photo(
+            photo=photo_url, 
+            caption=caption_text, 
+            reply_markup=make_row_keyboard(["ДА", "НЕТ"]),
+            parse_mode="HTML" # Используем HTML для корректной ссылки
+        )
     except Exception as e:
-        # Если фото не грузится, просто отправляем текст, чтобы бот не упал
-        print(f"Ошибка фото: {e}")
-        await message.answer(text=caption_text, reply_markup=make_row_keyboard(["ДА", "НЕТ"]))
-
+        print(f"Ошибка при отправке фото: {e}")
+        await message.answer(
+            text=caption_text, 
+            reply_markup=make_row_keyboard(["ДА", "НЕТ"]),
+            parse_mode="HTML"
+        )
+    
     await state.set_state(Survey.q1_time)
 
 @dp.message(Survey.q1_time)
