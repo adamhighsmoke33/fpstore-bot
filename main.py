@@ -188,7 +188,7 @@ async def finish_now(m: types.Message, state: FSMContext):
         f"🔗 <b>Связь:</b> {user}\n"
         f"📞 <b>Тел:</b> {data.get('q3')}\n"
         f"💰 <b>Бюджет:</b> {data.get('q4')}\n"
-        f"📦 <b>Комплектация:</b> {data.get('q5')}\n"
+        f"📦 <b>Сборка в стоимости?:</b> {data.get('q5')}\n"
         f"⚙️ <b>Задачи:</b> {data.get('q6')}\n"
         f"🎨 <b>Цвет корпуса:</b> {data.get('q7')}\n"
         f"💡 <b>Подсветка:</b> {data.get('q8')}\n"
