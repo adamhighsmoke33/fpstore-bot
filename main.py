@@ -37,7 +37,6 @@ class Survey(StatesGroup):
     q1_time = State()
     q2_name = State()
     q3_phone = State()
-    q4_budget = State()
     q5_service = State()
     q6_tasks = State()
     q7_color = State()
@@ -110,12 +109,6 @@ async def p3(m: types.Message, state: FSMContext):
     await m.answer("Ваш бюджет на сборку?", reply_markup=make_kb(["35-50", "50-75", "75-100", "100+"]))
     await state.set_state(Survey.q4_budget)
 
-@dp.message(Survey.q4_budget)
-async def p4(m: types.Message, state: FSMContext):
-    await state.update_data(q4=m.text)
-    await m.answer("Сборка и настройка входит в бюджет?", reply_markup=make_kb(["ДА", "НЕТ"]))
-    await state.set_state(Survey.q5_service)
-
 @dp.message(Survey.q5_service)
 async def p5(m: types.Message, state: FSMContext):
     await state.update_data(q5=m.text)
@@ -149,7 +142,7 @@ async def p9(m: types.Message, state: FSMContext):
 @dp.message(Survey.q10_gpu)
 async def p10(m: types.Message, state: FSMContext):
     await state.update_data(q10=m.text)
-    await m.answer("Нужна установка Windows?", reply_markup=make_kb(["ДА", "НЕТ"]))
+    await m.answer("Нужна установка Windows c драйверами и тестами?", reply_markup=make_kb(["ДА", "НЕТ"]))
     await state.set_state(Survey.q11_os)
 
 @dp.message(Survey.q11_os)
@@ -188,7 +181,6 @@ async def finish_now(m: types.Message, state: FSMContext):
         f"🔗 <b>Связь:</b> {user}\n"
         f"📞 <b>Тел:</b> {data.get('q3')}\n"
         f"💰 <b>Бюджет:</b> {data.get('q4')}\n"
-        f"📦 <b>Сборка в стоимости?:</b> {data.get('q5')}\n"
         f"⚙️ <b>Задачи:</b> {data.get('q6')}\n"
         f"🎨 <b>Цвет корпуса:</b> {data.get('q7')}\n"
         f"💡 <b>Подсветка:</b> {data.get('q8')}\n"
