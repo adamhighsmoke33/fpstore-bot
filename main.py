@@ -7,8 +7,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
-# Добавили этот импорт для работы с файлами
-from aiogram.types import FSInputFile
+from aiogram.types import FSInputFile, BotCommand
 
 # --- 1. ВЕБ-СЕРВЕР ДЛЯ RENDER ---
 app = Flask('')
@@ -188,12 +187,29 @@ async def finish_now(m: types.Message, state: FSMContext):
         f"⏰ <b>Срочность:</b> {data.get('q1')}"
     )
     await bot.send_message(ADMIN_ID, rep, parse_mode="HTML")
-    await m.answer("✅ Заявка принята! Скоро свяжемся.", reply_markup=types.ReplyKeyboardRemove())
+    
+    # Кнопка для повторного старта внизу
+    kb_restart = ReplyKeyboardBuilder()
+    kb_restart.button(text="/start")
+    
+    await m.answer(
+        "✅ Заявка принята! Скоро свяжемся.\n\n"
+        "Для повторного заказа нажмите кнопку <b>/start</b> ниже 👇", 
+        reply_markup=kb_restart.as_markup(resize_keyboard=True),
+        parse_mode="HTML"
+    )
     await state.clear()
 
 async def main():
     keep_alive()
     await bot.delete_webhook(drop_pending_updates=True)
+    
+    # Установка синей кнопки Меню (будет видна всегда)
+    await bot.set_my_commands([
+        BotCommand(command="start", description="Новый заказ / Запуск")
+    ])
+    
+    print("Бот запущен!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
